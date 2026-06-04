@@ -2,97 +2,88 @@ from crewai import Task
 
 
 def create_tasks(agents, resume_text, job_description, target_role):
+    resume_short = resume_text[:1200]
+    jd_short = job_description[:900]
+
     resume_task = Task(
         description=f"""
-Analyze the resume for the target role: {target_role}.
+Target role: {target_role}
 
 Resume:
-{resume_text[:2500]}
+{resume_short}
 
-Give a concise resume review.
+Give short resume review only.
 
-Include only:
-1. Resume summary in 3 lines
-2. Top 5 strengths
-3. Top 5 improvements
-4. Missing ATS keywords
-5. Resume score out of 100
+Format:
+- Summary: 2 lines
+- Strengths: 3 bullets
+- Improvements: 3 bullets
+- Missing keywords: 5 words max
+- Score: /100
 
-Keep the answer short and practical.
+Keep under 180 words.
 """,
-        expected_output=(
-            "A concise resume analysis with summary, strengths, improvements, missing keywords, and score."
-        ),
+        expected_output="Short resume review under 180 words.",
         agent=agents["resume_analyzer"],
     )
 
     job_match_task = Task(
         description=f"""
-Compare the resume with the job description for the target role: {target_role}.
+Target role: {target_role}
 
 Resume:
-{resume_text[:2500]}
+{resume_short}
 
 Job Description:
-{job_description[:2000]}
+{jd_short}
 
-Give a concise job match report.
+Give short job match analysis only.
 
-Include only:
-1. Match percentage
-2. Matched skills
-3. Missing skills
-4. Experience gaps
-5. Hiring readiness: Low / Medium / High
+Format:
+- Match percentage
+- Matched skills: 5 max
+- Missing skills: 5 max
+- Readiness: Low/Medium/High
 
-Keep the answer short and practical.
+Keep under 160 words.
 """,
-        expected_output=(
-            "A concise job match report with match percentage, matched skills, missing skills, gaps, and readiness level."
-        ),
+        expected_output="Short job match report under 160 words.",
         agent=agents["job_matcher"],
         context=[resume_task],
     )
 
     final_report_task = Task(
         description=f"""
-Create one final career improvement report for the target role: {target_role}.
+Create final short career report for: {target_role}
 
-Use the previous agent outputs.
+Use previous outputs only.
 
-Final report format:
-
+Format:
 # Multi-Agent AI Career Report
 
-## 1. Candidate Summary
-Write 3-4 lines.
+## Candidate Summary
+3 lines max.
 
-## 2. Resume Analysis
-Summarize resume score, strengths, and improvements.
+## Resume Feedback
+3 bullets max.
 
-## 3. Job Match Analysis
-Summarize match percentage, matched skills, missing skills, and readiness level.
+## Job Match
+3 bullets max.
 
-## 4. 7-Day Skill Improvement Plan
-Give a short 7-day plan only.
+## 7-Day Plan
+Day 1 to Day 7, one short line each.
 
-## 5. Interview Preparation
-Give 5 technical questions and 3 HR questions.
+## Interview Questions
+5 technical questions only.
 
-## 6. Final Recommendations
-Give 5 clear recommendations.
+## Final Recommendations
+3 bullets max.
 
-Keep the report professional, concise, and resume-project friendly.
+Keep total report under 350 words.
 """,
-        expected_output=(
-            "A final markdown career report with resume analysis, job match, 7-day plan, interview questions, and recommendations."
-        ),
+        expected_output="Final markdown career report under 350 words.",
         agent=agents["final_reporter"],
         context=[resume_task, job_match_task],
     )
 
-    return [
-        resume_task,
-        job_match_task,
-        final_report_task,
-    ]
+    return [resume_task, job_match_task, final_report_task]
