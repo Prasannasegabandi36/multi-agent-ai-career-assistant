@@ -7,26 +7,28 @@ load_dotenv()
 
 def get_llm():
     """
-    Create Groq LLM for CrewAI agents.
+    Groq LLM setup for CrewAI.
 
-    Required in .env or Streamlit Secrets:
-    GROQ_API_KEY=your_groq_api_key
+    Local .env:
+    GROQ_API_KEY=your_key
     GROQ_MODEL=groq/llama-3.1-8b-instant
+
+    Streamlit Secrets:
+    GROQ_API_KEY = "your_key"
+    GROQ_MODEL = "groq/llama-3.1-8b-instant"
     """
 
     model_name = os.getenv("GROQ_MODEL", "groq/llama-3.1-8b-instant")
     api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
-        raise ValueError(
-            "GROQ_API_KEY is missing. Add it in your .env file locally or Streamlit Secrets in cloud."
-        )
+        raise ValueError("GROQ_API_KEY is missing. Add it in .env or Streamlit Secrets.")
 
     return LLM(
         model=model_name,
         api_key=api_key,
-        temperature=0.2,
-        max_tokens=700,
+        temperature=0.1,
+        max_tokens=350,
     )
 
 
@@ -35,13 +37,8 @@ def create_agents():
 
     resume_analyzer = Agent(
         role="Resume Analyzer Agent",
-        goal=(
-            "Analyze the candidate resume for the target role and provide concise ATS-style feedback."
-        ),
-        backstory=(
-            "You are an expert technical resume reviewer. You check resumes for ATS keywords, "
-            "skills, project quality, clarity, and role readiness. You give short, practical feedback."
-        ),
+        goal="Review resume briefly for ATS, skills, projects, and role readiness.",
+        backstory="You are a concise technical resume reviewer. Give short practical feedback.",
         llm=llm,
         verbose=False,
         allow_delegation=False,
@@ -50,13 +47,8 @@ def create_agents():
 
     job_matcher = Agent(
         role="Job Match Agent",
-        goal=(
-            "Compare the resume with the job description and provide a short job-fit analysis."
-        ),
-        backstory=(
-            "You are a technical recruiter. You compare resumes with job descriptions and identify "
-            "matched skills, missing skills, and readiness level in a clear and concise way."
-        ),
+        goal="Compare resume with job description and give short job-fit analysis.",
+        backstory="You are a concise technical recruiter. Focus only on match, gaps, and readiness.",
         llm=llm,
         verbose=False,
         allow_delegation=False,
@@ -64,14 +56,9 @@ def create_agents():
     )
 
     final_reporter = Agent(
-        role="Final Career Report Agent",
-        goal=(
-            "Create one clean final career report using the resume analysis and job match findings."
-        ),
-        backstory=(
-            "You are a senior career advisor. You combine agent outputs into a polished, readable, "
-            "student-friendly career improvement report."
-        ),
+        role="Final Report Agent",
+        goal="Combine findings into one short career report.",
+        backstory="You are a concise career advisor. Produce a short markdown report.",
         llm=llm,
         verbose=False,
         allow_delegation=False,
