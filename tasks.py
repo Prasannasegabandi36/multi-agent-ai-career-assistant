@@ -7,129 +7,92 @@ def create_tasks(agents, resume_text, job_description, target_role):
 Analyze the resume for the target role: {target_role}.
 
 Resume:
-{resume_text}
+{resume_text[:2500]}
 
-Provide:
-1. Resume summary
-2. Strong points
-3. Weak points
+Give a concise resume review.
+
+Include only:
+1. Resume summary in 3 lines
+2. Top 5 strengths
+3. Top 5 improvements
 4. Missing ATS keywords
-5. 5 improved resume bullet points
-6. Overall resume score out of 100
+5. Resume score out of 100
+
+Keep the answer short and practical.
 """,
-        expected_output="A structured resume analysis with score, strengths, weaknesses, missing keywords, and improved bullet points.",
+        expected_output=(
+            "A concise resume analysis with summary, strengths, improvements, missing keywords, and score."
+        ),
         agent=agents["resume_analyzer"],
     )
 
     job_match_task = Task(
         description=f"""
-Compare the resume with this job description for the target role: {target_role}.
+Compare the resume with the job description for the target role: {target_role}.
 
 Resume:
-{resume_text}
+{resume_text[:2500]}
 
 Job Description:
-{job_description}
+{job_description[:2000]}
 
-Provide:
+Give a concise job match report.
+
+Include only:
 1. Match percentage
 2. Matched skills
 3. Missing skills
 4. Experience gaps
-5. Role-fit explanation
-6. Final hiring readiness level: Low / Medium / High
+5. Hiring readiness: Low / Medium / High
+
+Keep the answer short and practical.
 """,
-        expected_output="A job match report with percentage, matched skills, missing skills, and hiring readiness level.",
+        expected_output=(
+            "A concise job match report with match percentage, matched skills, missing skills, gaps, and readiness level."
+        ),
         agent=agents["job_matcher"],
         context=[resume_task],
-    )
-
-    skill_gap_task = Task(
-        description=f"""
-Create a 14-day practical learning plan for the candidate based on the resume, job description, and target role: {target_role}.
-
-Resume:
-{resume_text}
-
-Job Description:
-{job_description}
-
-The plan should include:
-1. Daily topic
-2. Practice task
-3. Mini project idea if useful
-4. GitHub update suggestion
-5. LinkedIn update suggestion
-""",
-        expected_output="A 14-day beginner-friendly skill gap learning roadmap.",
-        agent=agents["skill_gap_planner"],
-        context=[resume_task, job_match_task],
-    )
-
-    interview_task = Task(
-        description=f"""
-Prepare interview questions for the target role: {target_role}.
-
-Use the candidate resume and job description.
-
-Provide:
-1. 10 technical questions
-2. 5 project explanation questions
-3. 5 HR/behavioral questions
-4. 5 scenario-based questions
-5. Short answer tips for the candidate
-""",
-        expected_output="A personalized interview preparation question bank with answer tips.",
-        agent=agents["interview_coach"],
-        context=[resume_task, job_match_task],
-    )
-
-    linkedin_task = Task(
-        description=f"""
-Write a professional LinkedIn post for the candidate about improving career readiness for {target_role}.
-
-The post should mention:
-1. Resume improvement
-2. Skill gap learning
-3. Interview preparation
-4. Multi-agent AI project usage if relevant
-5. 5 suitable hashtags
-
-Keep it professional and student-friendly.
-""",
-        expected_output="A polished LinkedIn post with hashtags.",
-        agent=agents["linkedin_writer"],
-        context=[resume_task, job_match_task, skill_gap_task],
     )
 
     final_report_task = Task(
         description=f"""
 Create one final career improvement report for the target role: {target_role}.
 
-Combine all previous agent outputs into a clean report with these sections:
+Use the previous agent outputs.
+
+Final report format:
 
 # Multi-Agent AI Career Report
 
 ## 1. Candidate Summary
-## 2. Resume Analysis
-## 3. Job Match Analysis
-## 4. Skill Gap Roadmap
-## 5. Interview Preparation
-## 6. LinkedIn Post
-## 7. Final Recommendations
+Write 3-4 lines.
 
-Make it clear, structured, and ready to download.
+## 2. Resume Analysis
+Summarize resume score, strengths, and improvements.
+
+## 3. Job Match Analysis
+Summarize match percentage, matched skills, missing skills, and readiness level.
+
+## 4. 7-Day Skill Improvement Plan
+Give a short 7-day plan only.
+
+## 5. Interview Preparation
+Give 5 technical questions and 3 HR questions.
+
+## 6. Final Recommendations
+Give 5 clear recommendations.
+
+Keep the report professional, concise, and resume-project friendly.
 """,
-        expected_output="A complete final career report in markdown format.",
+        expected_output=(
+            "A final markdown career report with resume analysis, job match, 7-day plan, interview questions, and recommendations."
+        ),
         agent=agents["final_reporter"],
-        context=[resume_task, job_match_task, skill_gap_task, interview_task, linkedin_task],
+        context=[resume_task, job_match_task],
     )
 
     return [
         resume_task,
         job_match_task,
-        skill_gap_task,
-        interview_task,
-        linkedin_task,
         final_report_task,
     ]
